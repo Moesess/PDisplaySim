@@ -5,24 +5,30 @@ import requests
 import os
 
 
+CONFIGPATH = "config.cfg"
+URL = "https://m0eses.pythonanywhere.com/PriceDisplay/"
+
+
 class Config:
     uid = ""
     qrcode = ""
     product = ""
     price = ""
+    url = URL
 
-    def __init__(self, uid=None, qrcode=None, product=None, price=None):
+    def save(self, uid=None, qrcode=None, product=None, price=None):
         self.uid = uid
         self.qrcode = qrcode
         self.product = product
         self.price = price
+        self.write_to_file()
 
     def write_to_file(self):
         with open(CONFIGPATH, "w") as f:
-            f.write(self.uid)
-            f.write(self.qrcode)
-            f.write(self.product)
-            f.write(self.price)
+            f.write(self.uid + "\n")
+            f.write(self.qrcode + "\n")
+            f.write(self.product + "\n")
+            f.write(self.price + "\n")
             f.close()
 
     def read_from_file(self):
@@ -33,27 +39,27 @@ class Config:
             self.price = f.readline()
             f.close()
 
+    def sync_from_server(self):
+        url = f"{URL}{self.uid}/".replace("\n", "")
+        response = requests.get(f"{url}/")
+        self.save(response.json()["uid"],
+                  response.json()["qr_code_img"],
+                  response.json()["product"]["name"],
+                  response.json()["product"]["price"]
+                  )
 
-CONFIGPATH = "config.cfg"
-URL = "https://m0eses.pythonanywhere.com/PriceDisplay/"
+
 CONFIGINSTANCE = Config()
-
-
-def create_config():
-    response = requests.post(URL)
-    CONFIGINSTANCE = Config(response.json()["uid"], response.json()["qr_code_img"], "Brak produktu", "0")
-    CONFIGINSTANCE.write_to_file()
-
-
-def read_config():
-    CONFIGINSTANCE.read_from_file()
 
 
 def check_config():
     if not os.path.isfile(CONFIGPATH):
-        create_config()
+        response = requests.post(URL)
+        CONFIGINSTANCE.save(response.json()["uid"], response.json()["qr_code_img"], "Brak produktu", "0")
+        CONFIGINSTANCE.write_to_file()
     else:
-        read_config()
+        CONFIGINSTANCE.read_from_file()
+        CONFIGINSTANCE.sync_from_server()
 
 
 @app.route('/')
