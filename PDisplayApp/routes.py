@@ -4,9 +4,9 @@ from PDisplayApp import app
 import requests
 import os
 
-
-CONFIGPATH = "config.cfg"
+CONFIGPATH = str(__file__).replace("PDisplayApp\\routes.py", "config.cfg")
 URL = "https://m0eses.pythonanywhere.com/PriceDisplay/"
+# URL = "http://127.0.0.1:8000/PriceDisplay/"
 
 
 class Config:
@@ -14,7 +14,6 @@ class Config:
     qrcode = ""
     product = ""
     price = ""
-    url = URL
 
     def save(self, uid=None, qrcode=None, product=None, price=None):
         self.uid = uid
@@ -56,7 +55,6 @@ def check_config():
     if not os.path.isfile(CONFIGPATH):
         response = requests.post(URL)
         CONFIGINSTANCE.save(response.json()["uid"], response.json()["qr_code_img"], "Brak produktu", "0")
-        CONFIGINSTANCE.write_to_file()
     else:
         CONFIGINSTANCE.read_from_file()
         CONFIGINSTANCE.sync_from_server()
