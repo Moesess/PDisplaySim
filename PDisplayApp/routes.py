@@ -43,8 +43,8 @@ class Config:
         response = requests.get(f"{url}/")
         self.save(response.json()["uid"],
                   response.json()["qr_code_img"],
-                  response.json()["product"]["name"],
-                  response.json()["product"]["price"]
+                  response.json()["product_details"]["name"],
+                  response.json()["product_details"]["price"]
                   )
 
 
